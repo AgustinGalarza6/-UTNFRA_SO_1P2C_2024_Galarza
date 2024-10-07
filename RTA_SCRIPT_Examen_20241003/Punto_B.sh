@@ -64,3 +64,5 @@ sudo mount ${DISCO}10 /Examenes-UTN/profesores
 } | sudo tee -a /etc/fstab
 
 echo "Fin del script, se ejecutó correctamente!"
+
+
