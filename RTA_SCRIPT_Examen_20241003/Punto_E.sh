@@ -1,18 +1,21 @@
 #!/bin/bash
 
-echo "Ejecución del script"
+# Especifica la ruta absoluta del directorio
+DIRECTORIO="/home/vagrant/repogit/UTNFRA_SO_1P2C_2024_Galarza/RTA_ARCHIVOS_Examen_20241003"
 
-# Ruta de la carpeta
-DIR=~/repogit/UTNFRA_SO_1P2C_2024_Galarza/RTA_ARCHIVOS_Examen_20241003
+# Verificar si el directorio existe
+if [ -d "$DIRECTORIO" ]; then
+    echo "Directorio existente, procediendo..."
+else
+    echo "Directorio no encontrado, creándolo..."
+    mkdir "$DIRECTORIO"
+fi
 
-# Asignamos a la variable FILTER_FILE la ruta completa del archivo Filtro_basico.txt.
-FILTER_FILE="$DIR/Filtro_basico.txt"
+# Extraer la información del total de memoria RAM y guardarla en el archivo Filtro_Basico.txt
+grep MemTotal /proc/meminfo > "$DIRECTORIO/Filtro_Basico.txt"
 
-# Obtener el total de memoria RAM
-grep MemTotal /proc/meminfo > "$FILTER_FILE"
-
-# Obtener información del fabricante del chassis
-sudo dmidecode -t chassis | grep -i 'manufacturer' >> "$FILTER_FILE"
+# Extraer la información del fabricante del chasis y agregarla al archivo
+sudo dmidecode -t chassis | grep "Manufacturer" >> "$DIRECTORIO/Filtro_Basico.txt"
 
 echo "Archivo Filtro_basico.txt creado exitosamente en $DIR."
 

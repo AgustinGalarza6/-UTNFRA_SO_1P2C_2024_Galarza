@@ -1,4 +1,4 @@
 Mi IP Pública es: 186.57.82.31
-Mi usuario es: root
-El Hash de mi usuario es: 4813494d137e1631bba301d5acab6e7bb7aa74ce1185d456565ef51d737677b2
+Mi usuario es: vagrant
+El Hash de mi usuario es: 9756da65fe52aefb7651f526629b9a04cf6119172caa3bfe027fd2a2409fce4f
 La URL de mi repositorio es: https://github.com/AgustinGalarza6/UTNFRA_SO_1P2C_2024_Galarza.git
