@@ -1,67 +1,77 @@
 #!/bin/bash
+echo "Script Punto B"
 
-# Variables
-DISK="/dev/sdc" # Disco de 10GB
-PARTITION_SIZE_PRIMARY=$((1 * 1024 * 1024 * 1024)) # Tamaño de cada partición primaria (1GB)
-PARTITION_SIZE_LOGICAL=$((1 * 1024 * 1024 * 1024)) # Tamaño de cada partición lógica (1GB)
-MOUNT_BASE="/mnt/particiones" # Ruta base para montar las particiones
-
-# Crear el directorio de montaje
-sudo mkdir -p $MOUNT_BASE
-
-# Particionando...
-echo "Creando particiones en $DISK..."
+num_primarias=4
+num_logicas=6
+tam_particion=1
 
 {
-    # Crear 3 particiones primarias de 1 GB
-    for i in {1..3}; do
-        echo "n" # Nueva partición
-        echo "p" # Primaria
-        echo ""  # Número de partición (dejar en blanco para que fdisk asigne automáticamente)
-        echo "+$PARTITION_SIZE_PRIMARY" # Tamaño de la partición = 1GB
+    # Crear las particiones primarias
+    for ((i=1; i<=num_primarias; i++)); do
+        echo "n"       # Crear nueva partición
+        echo "p"       # Partición primaria
+        echo "$i"      # Número de partición
+        if [ $i -eq 1 ]; then
+            echo ""    # Primera partición, empieza en el primer sector
+        else
+            echo ""    # Usar el siguiente sector disponible
+        fi
+        echo "+${tam_particion}G" # Tamaño de 1GB
     done
 
-    # Crear 1 partición extendida de 7 GB
-    echo "n" # Nueva partición
-    echo "e" # Extendida
-    echo ""  # Número de partición (dejar en blanco para que fdisk asigne automáticamente)
-    echo ""  # Usar el tamaño máximo disponible = 7GB
+    # Crear una partición extendida
+    echo "n"           # Crear nueva partición
+    echo "e"           # Partición extendida
+    echo ""            # Usar el siguiente número de partición
+    echo ""            # Usar el siguiente sector disponible
+    echo "+$((num_logicas * tam_particion))G" # Tamaño total de las lógicas
 
-    # Crear 6 particiones lógicas de 1 GB dentro de la extendida
-    for i in {5..10}; do
-        echo "n" # Nueva partición
-        echo "l" # Lógica
-        echo ""  # Número de partición (dejar en blanco para que fdisk asigne automáticamente)
-        echo "+$PARTITION_SIZE_LOGICAL" # Tamaño de la partición = 1GB
+    # Crear las particiones lógicas dentro de la extendida
+    for ((i=1; i<=num_logicas; i++)); do
+        echo "n"       # Crear nueva partición
+        echo "l"       # Partición lógica
+        echo ""        # Usar el siguiente sector disponible
+        echo "+${tam_particion}G" # Tamaño de 1GB
     done
 
-    echo "w" # Guardar y salir
-} | sudo fdisk $DISK
+    echo "w"           # Escribir cambios
+} | sudo fdisk /dev/sdc
 
-echo "Particiones creadas exitosamente."
+# Actualizar la tabla de particiones
+sudo partprobe /dev/sdc
 
-# Formatear las particiones
-echo "Formateando las particiones..."
-for i in {1..3}; do
-    sudo mkfs.ext4 "${DISK}p${i}"
+echo "Formatear las particiones con ext4"
+for i in {1..4}; do
+    sudo mkfs.ext4 /dev/sdc$i
 done
 
 for i in {5..10}; do
-    sudo mkfs.ext4 "${DISK}p${i}"
+    sudo mkfs.ext4 /dev/sdc$i
 done
 
-echo "Particiones formateadas exitosamente."
-
-# Montar las particiones
 echo "Montando las particiones..."
-for i in {1..3}; do
-    sudo mount "${DISK}p${i}" "$MOUNT_BASE/particion_pri_$i"
-done
+sudo mount /dev/sdc1 /Examenes-UTN/alumno_1/parcial_1
+sudo mount /dev/sdc2 /Examenes-UTN/alumno_1/parcial_2
+sudo mount /dev/sdc3 /Examenes-UTN/alumno_1/parcial_3
+sudo mount /dev/sdc4 /Examenes-UTN/alumno_2/parcial_1
+sudo mount /dev/sdc5 /Examenes-UTN/alumno_2/parcial_2
+sudo mount /dev/sdc6 /Examenes-UTN/alumno_2/parcial_3
+sudo mount /dev/sdc7 /Examenes-UTN/alumno_3/parcial_1
+sudo mount /dev/sdc8 /Examenes-UTN/alumno_3/parcial_2
+sudo mount /dev/sdc9 /Examenes-UTN/alumno_3/parcial_3
+sudo mount /dev/sdc10 /Examenes-UTN/profesores
 
-for i in {5..10}; do
-    sudo mount "${DISK}p${i}" "$MOUNT_BASE/particion_log_$((i-3))"
-done
-
-echo "Particiones montadas exitosamente."
-echo "Fin del script, se ejecutó correctamente!"
+# Agregar entradas a /etc/fstab para el montaje persistente
+{
+    echo "/dev/sdc1   /Examenes-UTN/alumno_1/parcial_1   ext4    defaults    0    2"
+    echo "/dev/sdc2   /Examenes-UTN/alumno_1/parcial_2   ext4    defaults    0    2"
+    echo "/dev/sdc3   /Examenes-UTN/alumno_1/parcial_3   ext4    defaults    0    2"
+    echo "/dev/sdc4   /Examenes-UTN/alumno_2/parcial_1   ext4    defaults    0    2"
+    echo "/dev/sdc5   /Examenes-UTN/alumno_2/parcial_2   ext4    defaults    0    2"
+    echo "/dev/sdc6   /Examenes-UTN/alumno_2/parcial_3   ext4    defaults    0    2"
+    echo "/dev/sdc7   /Examenes-UTN/alumno_3/parcial_1   ext4    defaults    0    2"
+    echo "/dev/sdc8   /Examenes-UTN/alumno_3/parcial_2   ext4    defaults    0    2"
+    echo "/dev/sdc9   /Examenes-UTN/alumno_3/parcial_3   ext4    defaults    0    2"
+    echo "/dev/sdc10  /Examenes-UTN/profesores            ext4    defaults    0    2"
+} | sudo tee -a /etc/fstab
 
